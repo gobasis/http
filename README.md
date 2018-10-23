@@ -1,7 +1,7 @@
 # http
 A http server integrated with httprouter and some gobasis libraries
 
-#Dependencies
+# Dependencies
 - go get github.com/julienschmidt/httprouter
 - go get github.com/BurntSushi/toml
 - go get -u go.uber.org/zap
