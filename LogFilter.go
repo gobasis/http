@@ -17,6 +17,7 @@ func logBefore(ctx *Context) {
 	ctx.Input.Data[requestUid] = utils.UUID.Get()
 	log.Info("A new requesting", "host", ctx.Request.Host, "method", ctx.Request.Method,
 		"url", ctx.Request.RequestURI, "remoteAddr", ctx.Request.RemoteAddr, requestUid, ctx.Input.Data[requestUid])
+	// more info: User-Agent request-body request-cookie
 }
 
 /*
