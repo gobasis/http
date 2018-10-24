@@ -2,11 +2,14 @@ package http
 
 import (
 	"github.com/julienschmidt/httprouter"
+	"github.com/gobasis/log"
 	"net/http"
+	"regexp"
 	"reflect"
 	"encoding/json"
-	"github.com/gobasis/log"
-	"regexp"
+	"compress/gzip"
+	"strings"
+
 )
 
 /*
@@ -172,7 +175,7 @@ func proxyFun(handler Handler) httprouter.Handle {
 			},
 			Output: &Output{
 				Status: 200,
-				EnableGzip: true,
+				EnableGzip: *ServerConf.EnableGzip,
 			},
 			Request: r,
 			ResponseWriter: w,
@@ -180,19 +183,30 @@ func proxyFun(handler Handler) httprouter.Handle {
 		if filter.before != nil {
 			filter.before(ctxNew) //invoke before filter
 		}
-		result := handler(ctxNew)
-		if result == nil {
-			//do nothing
-		} else if reflect.TypeOf(result).String() == "string" {
-			w.Write([]byte(result.(string))) //response raw result
-		} else {
-			bytes, err := json.Marshal(result)
-			if err != nil {
-				log.Error("json marshal failed", "result", result, "error", err)
-				w.WriteHeader(500)
+		result := handler(ctxNew) //invoke handler
+		if result != nil {
+			var bytes []byte
+			if reflect.TypeOf(result).String() == "string" {
+				bytes = []byte(result.(string)) //response raw result
 			} else {
-				w.Header().Set("Content-Type", "application/json")
-				w.Write(bytes)
+				bs, err := json.Marshal(result)
+				if err != nil {
+					log.Error("json marshal failed", "result", result, "error", err)
+					w.WriteHeader(500)
+				} else {
+					w.Header().Set("Content-Type", "application/json")
+					bytes = bs
+				}
+			}
+			if len(bytes) > 0 {
+				if ctxNew.Output.EnableGzip && strings.Contains(ctxNew.Request.Header.Get("Accept-Encoding"), "gzip") {
+					w.Header().Set("Content-Encoding", "gzip")
+					gzipWriter := gzip.NewWriter(w)
+					gzipWriter.Write(bytes)
+					defer gzipWriter.Close()
+				} else {
+					w.Write(bytes)
+				}
 			}
 		}
 		if filter.after != nil {

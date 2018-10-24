@@ -1,0 +1,6 @@
+# This is a TOML document about server info.
+
+address = ""
+port = 8080
+public = "public"
+enableGzip = true
