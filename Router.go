@@ -187,6 +187,7 @@ func proxyFun(handler Handler) httprouter.Handle {
 		if result != nil {
 			var bytes []byte
 			if reflect.TypeOf(result).String() == "string" {
+				w.Header().Set("Content-Type", "text/html")
 				bytes = []byte(result.(string)) //response raw result
 			} else {
 				bs, err := json.Marshal(result)
