@@ -160,6 +160,7 @@ proxyFun a proxy for any handler
  */
 func proxyFun(handler Handler) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+		//TODO incrementConnections defer decrementConnections()
 		var filter filterHandler
 		for key, value := range Router.filters {
 			ok, err := regexp.MatchString(key, r.URL.RawPath)
